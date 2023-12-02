@@ -1,62 +1,46 @@
+use std::collections::HashMap;
+
 fn part_1(input: &str) -> i32 {
-    let mut result = 0;
+    let cmap = HashMap::from([("red", 12), ("green", 13), ("blue", 14)]);
 
-    for line in input.lines() {
-        let split: Vec<_> = line.split([':', ',', ';']).collect();
-        let game_id: i32 = split[0][5..].parse().unwrap();
-        let mut flag = true;
+    input
+        .lines()
+        .filter_map(|line| {
+            let split = line.split([':', ',', ';']).collect::<Vec<_>>();
+            let game_id: i32 = split[0][5..].parse().unwrap();
 
-        for sect in &split[1..] {
-            if !match sect.split_whitespace().collect::<Vec<_>>()[..] {
-                [n, "red"] => n.parse::<i32>().unwrap() <= 12,
-                [n, "green"] => n.parse::<i32>().unwrap() <= 13,
-                [n, "blue"] => n.parse::<i32>().unwrap() <= 14,
-                _ => true,
-            } {
-                flag = false;
-                break;
-            }
-        }
-        if flag {
-            result += game_id;
-        }
-    }
-    result
+            split[1..]
+                .iter()
+                .all(|s| {
+                    if let [n, color] = s.split_whitespace().collect::<Vec<_>>()[..] {
+                        return n.parse::<i32>().unwrap() <= *cmap.get(color).unwrap();
+                    }
+                    true
+                })
+                .then_some(game_id)
+        })
+        .sum()
 }
 
 fn part_2(input: &str) -> u32 {
-    let mut result: u32 = 0;
+    input
+        .lines()
+        .map(|line| {
+            let mut cmap = HashMap::from([("red", 0), ("green", 0), ("blue", 0)]);
 
-    for line in input.lines() {
-        let mut min_num = [0, 0, 0];
-        let split: Vec<_> = line.split([':', ',', ';']).collect();
+            let split: Vec<_> = line.split([':', ',', ';']).collect();
+            split[1..].iter().for_each(|s| {
+                if let [n, color] = s.split_whitespace().collect::<Vec<_>>()[..] {
+                    let n = n.parse::<u32>().unwrap();
+                    if n > *cmap.get(color).unwrap() {
+                        cmap.insert(color, n);
+                    }
+                }
+            });
 
-        for sect in &split[1..] {
-            match sect.split_whitespace().collect::<Vec<_>>()[..] {
-                [n, "red"] => {
-                    let n = n.parse::<u32>().unwrap();
-                    if n > min_num[0] {
-                        min_num[0] = n;
-                    }
-                }
-                [n, "green"] => {
-                    let n = n.parse::<u32>().unwrap();
-                    if n > min_num[1] {
-                        min_num[1] = n;
-                    }
-                }
-                [n, "blue"] => {
-                    let n = n.parse::<u32>().unwrap();
-                    if n > min_num[2] {
-                        min_num[2] = n;
-                    }
-                }
-                _ => (),
-            }
-        }
-        result += min_num.iter().product::<u32>();
-    }
-    result
+            cmap.values().product::<u32>()
+        })
+        .sum()
 }
 
 fn main() {
